@@ -227,7 +227,8 @@ const ListingsGrid = () => {
           suffix="€"
           style={{ width: 100 }}
           onChange={(val) => {
-            setMinPrice(val === null || val === undefined || val === '' ? null : Number(val));
+            const num = val === null || val === undefined || val === '' ? null : Number(val);
+            setMinPrice(num);
             setPage(1);
           }}
         />
@@ -240,7 +241,8 @@ const ListingsGrid = () => {
           suffix="€"
           style={{ width: 100 }}
           onChange={(val) => {
-            setMaxPrice(val === null || val === undefined || val === '' ? null : Number(val));
+            const num = val === null || val === undefined || val === '' ? null : Number(val);
+            setMaxPrice(num);
             setPage(1);
           }}
         />
