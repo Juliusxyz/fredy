@@ -21,11 +21,13 @@ import {
   Toast,
   Divider,
   Input,
+  InputNumber,
   Select,
   Empty,
   Radio,
   RadioGroup,
   Space,
+  Popover,
 } from '@douyinfe/semi-ui-19';
 import {
   IconBriefcase,
@@ -52,6 +54,10 @@ import { debounce } from '../../../utils';
 
 import './ListingsGrid.less';
 import { IllustrationNoResult, IllustrationNoResultDark } from '@douyinfe/semi-illustrations';
+import _RangeSlider from 'react-range-slider-input';
+import 'react-range-slider-input/dist/style.css';
+
+const RangeSlider = _RangeSlider?.default ?? _RangeSlider;
 
 const { Text } = Typography;
 
@@ -73,8 +79,32 @@ const ListingsGrid = () => {
   const [jobNameFilter, setJobNameFilter] = useSearchParamState(sp, 'job', null, parseString);
   const [activityFilter, setActivityFilter] = useSearchParamState(sp, 'active', null, parseNullableBoolean);
   const [providerFilter, setProviderFilter] = useSearchParamState(sp, 'provider', null, parseString);
+  const [minPrice, setMinPrice] = useSearchParamState(sp, 'priceMin', null, parseNumber);
+  const [maxPrice, setMaxPrice] = useSearchParamState(sp, 'priceMax', null, parseNumber);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [listingToDelete, setListingToDelete] = useState(null);
+  const [pricePopoverVisible, setPricePopoverVisible] = useState(false);
+  const [sliderValue, setSliderValue] = useState([0, 0]);
+
+  const priceBounds = useMemo(() => {
+    const prices = (listingsData?.result || [])
+      .map((item) => Number(item.price))
+      .filter((p) => Number.isFinite(p) && p > 0);
+    if (prices.length === 0) return [0, 10000];
+    return [0, Math.max(...prices)];
+  }, [listingsData?.result]);
+
+  useEffect(() => {
+    if (minPrice === null && maxPrice === null) {
+      setSliderValue(priceBounds);
+    }
+  }, [priceBounds]);
+
+  useEffect(() => {
+    if (minPrice !== null || maxPrice !== null) {
+      setSliderValue([minPrice ?? priceBounds[0], maxPrice ?? priceBounds[1]]);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = () => {
     actions.listingsData.getListingsData({
@@ -83,13 +113,13 @@ const ListingsGrid = () => {
       sortfield: sortField,
       sortdir: sortDir,
       freeTextFilter,
-      filter: { watchListFilter, jobNameFilter, activityFilter, providerFilter },
+      filter: { watchListFilter, jobNameFilter, activityFilter, providerFilter, minPrice, maxPrice },
     });
   };
 
   useEffect(() => {
     loadData();
-  }, [page, sortField, sortDir, freeTextFilter, providerFilter, activityFilter, jobNameFilter, watchListFilter]);
+  }, [page, sortField, sortDir, freeTextFilter, providerFilter, activityFilter, jobNameFilter, watchListFilter, minPrice, maxPrice]);
 
   const handleFilterChange = useMemo(
     () =>
@@ -140,6 +170,11 @@ const ListingsGrid = () => {
   const cap = (val) => {
     return String(val).charAt(0).toUpperCase() + String(val).slice(1);
   };
+
+  const priceFilterLabel =
+    minPrice !== null || maxPrice !== null
+      ? `Price: ${minPrice ?? priceBounds[0]} – ${maxPrice ?? priceBounds[1]} €`
+      : 'Price';
 
   return (
     <div className="listingsGrid">
@@ -216,6 +251,77 @@ const ListingsGrid = () => {
             </Select.Option>
           ))}
         </Select>
+
+        <Popover
+          visible={pricePopoverVisible}
+          onVisibleChange={setPricePopoverVisible}
+          trigger="click"
+          showArrow
+          content={
+            <div className="listingsGrid__pricePopover">
+              <RangeSlider
+                min={priceBounds[0]}
+                max={priceBounds[1]}
+                value={sliderValue}
+                onInput={setSliderValue}
+                onChange={(val) => {
+                  const [min, max] = val;
+                  setMinPrice(min <= priceBounds[0] ? null : min);
+                  setMaxPrice(max >= priceBounds[1] ? null : max);
+                  setPage(1);
+                }}
+              />
+              <div className="listingsGrid__pricePopover__inputs">
+                <InputNumber
+                  min={priceBounds[0]}
+                  max={sliderValue[1]}
+                  value={sliderValue[0]}
+                  suffix="€"
+                  style={{ width: 100 }}
+                  onChange={(val) => {
+                    const v = val ?? priceBounds[0];
+                    setSliderValue([v, sliderValue[1]]);
+                    setMinPrice(v <= priceBounds[0] ? null : v);
+                    setPage(1);
+                  }}
+                />
+                <span>–</span>
+                <InputNumber
+                  min={sliderValue[0]}
+                  max={priceBounds[1]}
+                  value={sliderValue[1]}
+                  suffix="€"
+                  style={{ width: 100 }}
+                  onChange={(val) => {
+                    const v = val ?? priceBounds[1];
+                    setSliderValue([sliderValue[0], v]);
+                    setMaxPrice(v >= priceBounds[1] ? null : v);
+                    setPage(1);
+                  }}
+                />
+              </div>
+              {(minPrice !== null || maxPrice !== null) && (
+                <Button
+                  size="small"
+                  type="tertiary"
+                  block
+                  onClick={() => {
+                    setMinPrice(null);
+                    setMaxPrice(null);
+                    setSliderValue(priceBounds);
+                    setPage(1);
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+          }
+        >
+          <Button type={minPrice !== null || maxPrice !== null ? 'primary' : 'tertiary'}>
+            {priceFilterLabel}
+          </Button>
+        </Popover>
 
         <Select prefix="Sort by" style={{ width: 185 }} value={sortField} onChange={(val) => setSortField(val)}>
           <Select.Option value="job_name">Job Name</Select.Option>
