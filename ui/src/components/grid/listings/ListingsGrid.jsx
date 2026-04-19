@@ -79,14 +79,14 @@ const ListingsGrid = () => {
   const [localMaxPrice, setLocalMaxPrice] = useState('');
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [listingToDelete, setListingToDelete] = useState(null);
-  const loadData = (overrides = {}) => {
+  const loadData = () => {
     actions.listingsData.getListingsData({
       page,
       pageSize,
       sortfield: sortField,
       sortdir: sortDir,
       freeTextFilter,
-      filter: { watchListFilter, jobNameFilter, activityFilter, providerFilter, minPrice, maxPrice, ...overrides },
+      filter: { watchListFilter, jobNameFilter, activityFilter, providerFilter, minPrice, maxPrice },
     });
   };
 
@@ -107,24 +107,18 @@ const ListingsGrid = () => {
     () =>
       debounce((value) => {
         const num = value === '' || value == null ? null : Number(value);
-        const parsed = Number.isFinite(num) ? num : null;
-        setMinPrice(parsed);
-        loadData({ minPrice: parsed, maxPrice: maxPrice });
-        setPage(1);
+        setMinPrice(Number.isFinite(num) ? num : null);
       }, 600),
-    [maxPrice],
+    [],
   );
 
   const handleMaxPriceChange = useMemo(
     () =>
       debounce((value) => {
         const num = value === '' || value == null ? null : Number(value);
-        const parsed = Number.isFinite(num) ? num : null;
-        setMaxPrice(parsed);
-        loadData({ minPrice: minPrice, maxPrice: parsed });
-        setPage(1);
+        setMaxPrice(Number.isFinite(num) ? num : null);
       }, 600),
-    [minPrice],
+    [],
   );
 
   useEffect(() => {
