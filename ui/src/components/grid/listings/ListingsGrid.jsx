@@ -73,26 +73,27 @@ const ListingsGrid = () => {
   const [jobNameFilter, setJobNameFilter] = useSearchParamState(sp, 'job', null, parseString);
   const [activityFilter, setActivityFilter] = useSearchParamState(sp, 'active', null, parseNullableBoolean);
   const [providerFilter, setProviderFilter] = useSearchParamState(sp, 'provider', null, parseString);
-  const [minPrice, setMinPrice] = useSearchParamState(sp, 'priceMin', null, parseNumber);
-  const [maxPrice, setMaxPrice] = useSearchParamState(sp, 'priceMax', null, parseNumber);
+  const [minPrice, setMinPrice] = useState(null);
+  const [maxPrice, setMaxPrice] = useState(null);
   const [localMinPrice, setLocalMinPrice] = useState('');
   const [localMaxPrice, setLocalMaxPrice] = useState('');
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [listingToDelete, setListingToDelete] = useState(null);
-  const loadData = () => {
+
+  const loadData = ({ minP = minPrice, maxP = maxPrice } = {}) => {
     actions.listingsData.getListingsData({
       page,
       pageSize,
       sortfield: sortField,
       sortdir: sortDir,
       freeTextFilter,
-      filter: { watchListFilter, jobNameFilter, activityFilter, providerFilter, minPrice, maxPrice },
+      filter: { watchListFilter, jobNameFilter, activityFilter, providerFilter, minPrice: minP, maxPrice: maxP },
     });
   };
 
   useEffect(() => {
     loadData();
-  }, [page, sortField, sortDir, freeTextFilter, providerFilter, activityFilter, jobNameFilter, watchListFilter, minPrice, maxPrice]);
+  }, [page, sortField, sortDir, freeTextFilter, providerFilter, activityFilter, jobNameFilter, watchListFilter]);
 
   const handleFilterChange = useMemo(
     () =>
@@ -107,7 +108,9 @@ const ListingsGrid = () => {
     () =>
       debounce((value) => {
         const num = value === '' || value == null ? null : Number(value);
-        setMinPrice(Number.isFinite(num) ? num : null);
+        const parsed = Number.isFinite(num) ? num : null;
+        setMinPrice(parsed);
+        loadData({ minP: parsed });
       }, 600),
     [],
   );
@@ -116,7 +119,9 @@ const ListingsGrid = () => {
     () =>
       debounce((value) => {
         const num = value === '' || value == null ? null : Number(value);
-        setMaxPrice(Number.isFinite(num) ? num : null);
+        const parsed = Number.isFinite(num) ? num : null;
+        setMaxPrice(parsed);
+        loadData({ maxP: parsed });
       }, 600),
     [],
   );
