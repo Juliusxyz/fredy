@@ -223,12 +223,11 @@ const ListingsGrid = () => {
           placeholder="Min €"
           min={0}
           controls={false}
-          value={minPrice || ''}
+          value={minPrice}
           suffix="€"
           style={{ width: 100 }}
           onChange={(val) => {
-            const parsed = val ? Number(val) : null;
-            setMinPrice(parsed);
+            setMinPrice(val === null || val === undefined || val === '' ? null : Number(val));
             setPage(1);
           }}
         />
@@ -237,12 +236,11 @@ const ListingsGrid = () => {
           placeholder="Max €"
           min={0}
           controls={false}
-          value={maxPrice || ''}
+          value={maxPrice}
           suffix="€"
           style={{ width: 100 }}
           onChange={(val) => {
-            const parsed = val ? Number(val) : null;
-            setMaxPrice(parsed);
+            setMaxPrice(val === null || val === undefined || val === '' ? null : Number(val));
             setPage(1);
           }}
         />
