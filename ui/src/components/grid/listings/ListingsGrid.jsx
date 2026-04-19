@@ -21,7 +21,6 @@ import {
   Toast,
   Divider,
   Input,
-  InputNumber,
   Select,
   Empty,
   Radio,
@@ -97,6 +96,26 @@ const ListingsGrid = () => {
     () =>
       debounce((value) => {
         setFreeTextFilter(value || null);
+        setPage(1);
+      }, 500),
+    [],
+  );
+
+  const handleMinPriceChange = useMemo(
+    () =>
+      debounce((value) => {
+        const num = value === '' || value == null ? null : Number(value);
+        setMinPrice(Number.isFinite(num) ? num : null);
+        setPage(1);
+      }, 500),
+    [],
+  );
+
+  const handleMaxPriceChange = useMemo(
+    () =>
+      debounce((value) => {
+        const num = value === '' || value == null ? null : Number(value);
+        setMaxPrice(Number.isFinite(num) ? num : null);
         setPage(1);
       }, 500),
     [],
@@ -219,32 +238,22 @@ const ListingsGrid = () => {
           ))}
         </Select>
 
-        <InputNumber
+        <Input
           placeholder="Min €"
-          min={0}
-          controls={false}
-          value={minPrice}
           suffix="€"
+          type="number"
+          defaultValue={minPrice ?? ''}
           style={{ width: 100 }}
-          onChange={(val) => {
-            const num = val === null || val === undefined || val === '' ? null : Number(val);
-            setMinPrice(num);
-            setPage(1);
-          }}
+          onChange={handleMinPriceChange}
         />
         <span style={{ alignSelf: 'center', margin: '0 6px', color: '#ffffff' }}>–</span>
-        <InputNumber
+        <Input
           placeholder="Max €"
-          min={0}
-          controls={false}
-          value={maxPrice}
           suffix="€"
+          type="number"
+          defaultValue={maxPrice ?? ''}
           style={{ width: 100 }}
-          onChange={(val) => {
-            const num = val === null || val === undefined || val === '' ? null : Number(val);
-            setMaxPrice(num);
-            setPage(1);
-          }}
+          onChange={handleMaxPriceChange}
         />
 
         <Select prefix="Sort by" style={{ width: 185 }} value={sortField} onChange={(val) => setSortField(val)}>
