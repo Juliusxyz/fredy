@@ -222,23 +222,27 @@ const ListingsGrid = () => {
         <InputNumber
           placeholder="Min €"
           min={0}
-          value={minPrice}
+          controls={false}
+          value={minPrice || ''}
           suffix="€"
-          style={{ width: 110 }}
+          style={{ width: 100 }}
           onChange={(val) => {
-            setMinPrice(val ?? null);
+            const parsed = val ? Number(val) : null;
+            setMinPrice(parsed);
             setPage(1);
           }}
         />
-        <span style={{ alignSelf: 'center' }}>–</span>
+        <span style={{ alignSelf: 'center', margin: '0 6px', color: '#ffffff' }}>–</span>
         <InputNumber
           placeholder="Max €"
           min={0}
-          value={maxPrice}
+          controls={false}
+          value={maxPrice || ''}
           suffix="€"
-          style={{ width: 110 }}
+          style={{ width: 100 }}
           onChange={(val) => {
-            setMaxPrice(val ?? null);
+            const parsed = val ? Number(val) : null;
+            setMaxPrice(parsed);
             setPage(1);
           }}
         />
