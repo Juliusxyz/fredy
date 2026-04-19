@@ -75,6 +75,8 @@ const ListingsGrid = () => {
   const [providerFilter, setProviderFilter] = useSearchParamState(sp, 'provider', null, parseString);
   const [minPrice, setMinPrice] = useSearchParamState(sp, 'priceMin', null, parseNumber);
   const [maxPrice, setMaxPrice] = useSearchParamState(sp, 'priceMax', null, parseNumber);
+  const [localMinPrice, setLocalMinPrice] = useState(null);
+  const [localMaxPrice, setLocalMaxPrice] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [listingToDelete, setListingToDelete] = useState(null);
   const loadData = () => {
@@ -101,25 +103,15 @@ const ListingsGrid = () => {
     [],
   );
 
-  const handleMinPriceChange = useMemo(
-    () =>
-      debounce((value) => {
-        const num = value === '' || value == null ? null : Number(value);
-        setMinPrice(Number.isFinite(num) ? num : null);
-        setPage(1);
-      }, 500),
-    [],
-  );
+  const handleMinPriceChange = (value) => {
+    const num = value === '' || value == null ? null : Number(value);
+    setLocalMinPrice(Number.isFinite(num) ? num : null);
+  };
 
-  const handleMaxPriceChange = useMemo(
-    () =>
-      debounce((value) => {
-        const num = value === '' || value == null ? null : Number(value);
-        setMaxPrice(Number.isFinite(num) ? num : null);
-        setPage(1);
-      }, 500),
-    [],
-  );
+  const handleMaxPriceChange = (value) => {
+    const num = value === '' || value == null ? null : Number(value);
+    setLocalMaxPrice(Number.isFinite(num) ? num : null);
+  };
 
   useEffect(() => {
     return () => {
@@ -242,7 +234,7 @@ const ListingsGrid = () => {
           placeholder="Min €"
           suffix="€"
           type="number"
-          defaultValue={minPrice ?? ''}
+          value={localMinPrice ?? ''}
           style={{ width: 100 }}
           onChange={handleMinPriceChange}
         />
@@ -251,7 +243,7 @@ const ListingsGrid = () => {
           placeholder="Max €"
           suffix="€"
           type="number"
-          defaultValue={maxPrice ?? ''}
+          value={localMaxPrice ?? ''}
           style={{ width: 100 }}
           onChange={handleMaxPriceChange}
         />
@@ -278,7 +270,12 @@ const ListingsGrid = () => {
         />
       )}
       <Row gutter={[16, 16]}>
-        {(listingsData?.result || []).map((item) => (
+        {(listingsData?.result || []).filter((item) => {
+          const p = Number(item.price);
+          if (localMinPrice !== null && p < localMinPrice) return false;
+          if (localMaxPrice !== null && p > localMaxPrice) return false;
+          return true;
+        }).map((item) => (
           <Col key={item.id} xs={24} sm={12} md={12} lg={8} xl={8} xxl={6}>
             <Card
               className={`listingsGrid__card ${!item.is_active ? 'listingsGrid__card--inactive' : ''}`}
